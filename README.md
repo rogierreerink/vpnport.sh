@@ -1,10 +1,4 @@
-Yes, a few formatting issues occurred during copy-pasting where newlines were stripped in the code blocks for **Step 3** and **Step 4**.
-
-Here is the corrected markdown ready for your README:
-
----
-
-# VPN Port Refresher & Hook Runner
+# vpnport.sh
 
 A lightweight Bash script that maintains dynamic VPN port forwards via NAT-PMP and runs executable drop-in scripts whenever the assigned port changes.
 
