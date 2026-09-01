@@ -19,7 +19,7 @@ fi
 
 while true
 do
-    date
+	echo "Refreshing port mappings"
     
     # Request UDP and TCP port mappings
     UDP_OUT=$(natpmpc -a 1 0 udp 60 -g "$GATEWAY" 2>&1)
