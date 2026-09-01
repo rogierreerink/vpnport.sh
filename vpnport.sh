@@ -1,8 +1,21 @@
 #!/bin/bash
 
-GATEWAY="10.2.0.1"
+IFACE="${1}"
 HOOK_DIR="/usr/local/etc/vpnport.d"
 LAST_PORT=""
+
+# Attempt to fetch the gateway IP from the routing table
+GATEWAY=$(ip -4 route show dev "$IFACE" 2>/dev/null | awk '/via/ {print $3; exit}')
+
+# Fallback: If no explicit 'via' route exists, compute the .1 gateway IP from the interface subnet
+if [ -z "$GATEWAY" ]; then
+    GATEWAY=$(ip -4 addr show dev "$IFACE" 2>/dev/null | awk -F'[ /]+' '/inet/ {print $3}' | sed 's/\.[0-9]*$/.1/')
+fi
+
+if [ -z "$GATEWAY" ]; then
+    echo "ERROR: Could not resolve gateway IP for interface $IFACE" >&2
+    exit 1
+fi
 
 while true
 do
