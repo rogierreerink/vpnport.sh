@@ -1,16 +1,20 @@
-# VPN Port Refresher
+Yes, a few formatting issues occurred during copy-pasting where newlines were stripped in the code blocks for **Step 3** and **Step 4**.
+
+Here is the corrected markdown ready for your README:
+
+---
+
+# VPN Port Refresher & Hook Runner
 
 A lightweight Bash script that maintains dynamic VPN port forwards via NAT-PMP and runs executable drop-in scripts whenever the assigned port changes.
 
-When connected to a VPN that assigns temporary inbound ports, this script sends periodic requests to keep the mapping open. If the assigned port changes, it executes any script placed in `/etc/vpnport.d/`, passing the new port number as the first argument (`$1`).
-
----
+When connected to a VPN that assigns temporary inbound ports, this script sends periodic requests to keep the mapping open. If the assigned port changes, it executes any script placed in `/usr/local/etc/vpnport.d/`, passing the new port number as the first argument (`$1`).
 
 ## How It Works
 
 1. Queries the VPN gateway using `natpmpc` every 45 seconds to keep UDP and TCP mappings alive.
 2. Parses the assigned public port.
-3. If the port changes or initial mapping occurs, it runs all executable files in `/etc/vpnport.d/ <PORT>`.
+3. If the port changes or initial mapping occurs, it runs all executable files in `/usr/local/etc/vpnport.d/ <PORT>`.
 
 ---
 
@@ -36,20 +40,21 @@ sudo chmod +x /usr/local/bin/vpnport.sh
 
 ### 3. Create the Hooks Directory and Transmission Hook
 
-Create `/etc/vpnport.d` and add a script to update Transmission's listening port via `transmission-remote`:
+Create `/usr/local/etc/vpnport.d` and add a script to update Transmission's listening port via `transmission-remote`:
 
 ```bash
-sudo mkdir -p /etc/vpnport.d
+sudo mkdir -p /usr/local/etc/vpnport.d
 
 ```
 
-Create `/etc/vpnport.d/50-transmission.sh`:
+Create `/usr/local/etc/vpnport.d/50-transmission.sh`:
 
 ```bash
 #!/bin/bash
 PORT="$1"
 
 if [ -n "$PORT" ]; then
+    # Add '-n username:password' if Transmission RPC authentication is enabled
     transmission-remote -p "$PORT"
 fi
 
@@ -58,7 +63,7 @@ fi
 Make the hook script executable:
 
 ```bash
-sudo chmod +x /etc/vpnport.d/50-transmission.sh
+sudo chmod +x /usr/local/etc/vpnport.d/50-transmission.sh
 
 ```
 
