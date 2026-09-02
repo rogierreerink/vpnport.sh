@@ -3,6 +3,7 @@
 IFACE="${1}"
 HOOK_DIR="/usr/local/etc/vpnport.d"
 LAST_PORT=""
+PENDING_HOOKS=()
 
 # Attempt to fetch the gateway IP from the routing table
 GATEWAY=$(ip -4 route show dev "$IFACE" 2>/dev/null | awk '/via/ {print $3; exit}')
@@ -34,19 +35,30 @@ do
         continue
     fi
 
-    # Trigger executable hooks if port has changed or initialized
+    # Populate pending hooks when the assigned port changes
     if [ "$PORT" != "$LAST_PORT" ]; then
         echo "Port assigned: $PORT"
+        LAST_PORT="$PORT"
+        PENDING_HOOKS=()
         if [ -d "$HOOK_DIR" ]; then
             for hook in "$HOOK_DIR"/*; do
-                if [ -f "$hook" ] && [ -x "$hook" ]; then
-                    echo "Executing hook: $hook"
-                    "$hook" "$PORT" || echo "Hook $hook failed with exit code $?" >&2
-                fi
+                [ -f "$hook" ] && [ -x "$hook" ] && PENDING_HOOKS+=("$hook")
             done
         fi
-        LAST_PORT="$PORT"
     fi
+
+    # Attempt execution for pending or previously failed hooks
+    FAILED_HOOKS=()
+    for hook in "${PENDING_HOOKS[@]}"; do
+        if [ -f "$hook" ] && [ -x "$hook" ]; then
+            echo "Executing hook: $hook"
+            if ! "$hook" "$PORT"; then
+                echo "Hook $hook failed with exit code $?" >&2
+                FAILED_HOOKS+=("$hook")
+            fi
+        fi
+    done
+    PENDING_HOOKS=("${FAILED_HOOKS[@]}")
 
     sleep 45
     echo
